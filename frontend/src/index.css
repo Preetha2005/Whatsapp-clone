@@ -1,0 +1,65 @@
+/* ===== CSS THEME VARIABLES ===== */
+:root[data-theme="dark"] {
+  --bg-primary: #111b21;
+  --bg-secondary: #202c33;
+  --bg-tertiary: #2a3942;
+  --bg-chat: #0b141a;
+  --bg-message-sent: #005c4b;
+  --bg-message-received: #202c33;
+  --bg-input: #2a3942;
+  --bg-hover: #2a3942;
+  --bg-active: #2a3942;
+  --text-primary: #e9edef;
+  --text-secondary: #8696a0;
+  --text-muted: #667781;
+  --border-color: #2a3942;
+  --border-light: #1e2d36;
+  --accent: #00a884;
+  --accent-hover: #02c39a;
+  --accent-light: rgba(0,168,132,0.15);
+  --shadow: rgba(0,0,0,0.4);
+  --icon-color: #8696a0;
+  --ai-bg: #1a2a3a;
+  --ai-border: #00a884;
+  --scrollbar: #374045;
+  --profile-overlay: rgba(0,0,0,0.7);
+}
+
+:root[data-theme="light"] {
+  --bg-primary: #f0f2f5;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0f2f5;
+  --bg-chat: #efeae2;
+  --bg-message-sent: #d9fdd3;
+  --bg-message-received: #ffffff;
+  --bg-input: #f0f2f5;
+  --bg-hover: #f5f6f6;
+  --bg-active: #e9edef;
+  --text-primary: #111b21;
+  --text-secondary: #54656f;
+  --text-muted: #8696a0;
+  --border-color: #e9edef;
+  --border-light: #e9edef;
+  --accent: #00a884;
+  --accent-hover: #008f72;
+  --accent-light: rgba(0,168,132,0.12);
+  --shadow: rgba(0,0,0,0.1);
+  --icon-color: #54656f;
+  --ai-bg: #f0fff8;
+  --ai-border: #00a884;
+  --scrollbar: #ccd0d5;
+  --profile-overlay: rgba(0,0,0,0.5);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background 0.3s, color 0.3s;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
