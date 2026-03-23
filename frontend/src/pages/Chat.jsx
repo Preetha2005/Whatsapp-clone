@@ -5,6 +5,7 @@ import ChatWindow from "../components/ChatWindow";
 import AIChat from "../components/AIChat";
 import ProfileModal from "../components/ProfileModal";
 import "./Chat.css";
+import { useAuth } from "../context/AuthContext";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -14,9 +15,22 @@ export default function Chat() {
   const [showAI, setShowAI] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
-  useEffect(() => {
-    axios.get(`${API}/users`).then(({ data }) => setUsers(data));
-  }, []);
+ useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      const { data } = await axios.get(`${API}/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUsers(data);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+  };
+
+  if (token) fetchUsers(); // IMPORTANT
+}, [token]);
 
   const handleSelectUser = (u) => {
     setSelectedUser(u);
