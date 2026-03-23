@@ -21,18 +21,23 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const fetchMe = async () => {
-    try {
-      const { data } = await axios.get(`${API}/api/users/me`);
-      setUser(data);
-    } catch {
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const { data } = await axios.get(`${API}/users/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setUser(data);
+  } catch (err) {
+    console.error("fetchMe error:", err.response?.data || err.message);
+    // ❌ DO NOT logout immediately
+  } finally {
+    setLoading(false);
+  }
+};
 
   const login = async (email, password) => {
-    const { data } = await axios.post(`${API}/api/auth/login`, { email, password });
+   const { data } = await axios.post(`${API}/auth/login`, { email, password });
     localStorage.setItem("token", data.token);
     axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
     setToken(data.token);
@@ -43,11 +48,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (username, email, password) => {
-    const { data } = await axios.post(`${API}/api/auth/register`, {
-      username,
-      email,
-      password,
-    });
+    const { data } = await axios.post(`${API}/auth/register`, {
+  username,
+  email,
+  password,
+});
     localStorage.setItem("token", data.token);
     axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
     setToken(data.token);
