@@ -8,13 +8,16 @@ const auth = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ message: "Unauthorized" });
   try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = { id: payload.id || payload._id }; // Ensure id exists
     next();
-  } catch {
+  } catch (err) {
+    console.error("Auth error:", err.message);
     res.status(401).json({ message: "Invalid token" });
   }
 };
 
+// Users route
 router.get("/", auth, async (req, res) => {
   try {
     const users = await User.find({ _id: { $ne: req.user.id } }).select("-password");
