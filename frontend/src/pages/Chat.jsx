@@ -5,8 +5,10 @@ import ChatWindow from "../components/ChatWindow";
 import AIChat from "../components/AIChat";
 import ProfileModal from "../components/ProfileModal";
 import "./Chat.css";
+ import { useAuth } from "../context/AuthContext";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API = import.meta.env.VITE_API_URL;
+const { token } = useAuth();
 
 export default function Chat() {
   const [users, setUsers] = useState([]);
@@ -14,9 +16,17 @@ export default function Chat() {
   const [showAI, setShowAI] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
-  useEffect(() => {
-    axios.get(`${API}/users`).then(({ data }) => setUsers(data));
-  }, []);
+ useEffect(() => {
+  if (!token) return;
+
+  axios.get(`${API}/api/users`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+  .then(({ data }) => setUsers(data))
+  .catch(err => console.error(err));
+}, [token]);
 
   const handleSelectUser = (u) => {
     setSelectedUser(u);
