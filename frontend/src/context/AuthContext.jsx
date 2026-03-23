@@ -8,7 +8,8 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
 
-  const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  // ✅ FIXED BASE URL
+  const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     if (token) {
@@ -21,7 +22,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchMe = async () => {
     try {
-      const { data } = await axios.get(`${API}/users/me`);
+      const { data } = await axios.get(`${API}/api/users/me`);
       setUser(data);
     } catch {
       logout();
@@ -31,23 +32,28 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const { data } = await axios.post(`${API}/auth/login`, { email, password });
+    const { data } = await axios.post(`${API}/api/auth/login`, { email, password });
     localStorage.setItem("token", data.token);
     axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
     setToken(data.token);
     setUser(data.user);
-    // fetch full profile
-    const profile = await axios.get(`${API}/users/me`);
+
+    const profile = await axios.get(`${API}/api/users/me`);
     setUser(profile.data);
   };
 
   const register = async (username, email, password) => {
-    const { data } = await axios.post(`${API}/auth/register`, { username, email, password });
+    const { data } = await axios.post(`${API}/api/auth/register`, {
+      username,
+      email,
+      password,
+    });
     localStorage.setItem("token", data.token);
     axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
     setToken(data.token);
     setUser(data.user);
-    const profile = await axios.get(`${API}/users/me`);
+
+    const profile = await axios.get(`${API}/api/users/me`);
     setUser(profile.data);
   };
 
