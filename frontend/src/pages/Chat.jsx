@@ -15,14 +15,9 @@ export default function Chat() {
   const [showAI, setShowAI] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
- useEffect(() => {
-  axios.get(`${API}/users`, {
-    headers: {
-      Authorization: `Bearer ${token}`, // 🔑 must send token
-    }
-  }).then(({ data }) => setUsers(data))
-    .catch(err => console.error("Fetch users error:", err.response?.data || err.message));
-}, []);
+  useEffect(() => {
+    axios.get(`${API}/users`).then(({ data }) => setUsers(data));
+  }, []);
 
   const handleSelectUser = (u) => {
     setSelectedUser(u);
