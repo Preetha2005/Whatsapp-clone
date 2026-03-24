@@ -1,13 +1,12 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import "./ChatWindow.css";
 
-const API = import.meta.env.VITE_API_URL;
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const BASE = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 
-// Tick mark component
 function Ticks({ status }) {
   if (status === "read") {
     return (
@@ -29,7 +28,6 @@ function Ticks({ status }) {
       </span>
     );
   }
-  // sent
   return (
     <span className="ticks sent-tick">
       <svg viewBox="0 0 18 18" width="14" height="14" fill="none">
@@ -48,19 +46,15 @@ export default function ChatWindow({ selectedUser }) {
   const [typing, setTyping] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [lightboxImg, setLightboxImg] = useState(null);
-  // Message search
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchIdx, setSearchIdx] = useState(0);
-  const [searching, setSearching] = useState(false);
-  // Audio recording
   const [recording, setRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const recordingTimerRef = useRef(null);
-
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -76,7 +70,6 @@ export default function ChatWindow({ selectedUser }) {
     fetchMessages();
   }, [selectedUser]);
 
-  // Mark messages as read when chat is opened
   useEffect(() => {
     if (!socket || !selectedUser || selectedUser === "ai") return;
     socket.emit("mark_read", { senderId: selectedUser._id });
@@ -88,7 +81,6 @@ export default function ChatWindow({ selectedUser }) {
     const handleReceive = (msg) => {
       if (msg.sender._id === selectedUser?._id || msg.receiver._id === selectedUser?._id) {
         setMessages((prev) => prev.find(m => m._id === msg._id) ? prev : [...prev, msg]);
-        // Mark as read immediately if chat is open
         socket.emit("mark_read", { senderId: selectedUser._id });
       }
     };
@@ -133,26 +125,28 @@ export default function ChatWindow({ selectedUser }) {
   const fetchMessages = async () => {
     try {
       const { data } = await axios.get(`${API}/api/messages/${selectedUser._id}`, {
-  headers: { Authorization: `Bearer ${token}` },
-});
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setMessages(data);
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // Message search
   const handleSearch = async (q) => {
     setSearchQuery(q);
     if (!q.trim()) { setSearchResults([]); return; }
-    setSearching(true);
     try {
-      const { data } = await axios.get(`${API}/api/messages/${selectedUser._id}/search?q=${encodeURIComponent(q)}`, {
-  headers: { Authorization: `Bearer ${token}` },
-});
+      const { data } = await axios.get(
+        `${API}/api/messages/${selectedUser._id}/search?q=${encodeURIComponent(q)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setSearchResults(data);
       setSearchIdx(0);
       if (data.length > 0) scrollToMessage(data[0]._id);
-    } catch (e) { console.error(e); }
-    finally { setSearching(false); }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const scrollToMessage = (id) => {
@@ -183,19 +177,28 @@ export default function ChatWindow({ selectedUser }) {
       const formData = new FormData();
       formData.append("file", file);
       const { data } = await axios.post(`${API}/api/upload`, formData, {
-  headers: {
-    "Content-Type": "multipart/form-data",
-    Authorization: `Bearer ${token}`,
-  },
-});
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (socket) {
-        socket.emit("send_message", { receiverId: selectedUser._id, content: data.fileName, type, fileUrl: data.fileUrl, fileName: data.fileName });
+        socket.emit("send_message", {
+          receiverId: selectedUser._id,
+          content: data.fileName,
+          type,
+          fileUrl: data.fileUrl,
+          fileName: data.fileName,
+        });
       }
-    } catch (err) { alert("Upload failed: " + (err.response?.data?.message || err.message)); }
-    finally { setUploading(false); e.target.value = ""; }
+    } catch (err) {
+      alert("Upload failed: " + (err.response?.data?.message || err.message));
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
   };
 
-  // Audio recording
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -212,22 +215,33 @@ export default function ChatWindow({ selectedUser }) {
           const formData = new FormData();
           formData.append("file", file);
           const { data } = await axios.post(`${API}/api/upload`, formData, {
-  headers: {
-    "Content-Type": "multipart/form-data",
-    Authorization: `Bearer ${token}`,
-  },
-});
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
+          });
           if (socket) {
-            socket.emit("send_message", { receiverId: selectedUser._id, content: "Voice message", type: "audio", fileUrl: data.fileUrl, fileName: data.fileName });
+            socket.emit("send_message", {
+              receiverId: selectedUser._id,
+              content: "Voice message",
+              type: "audio",
+              fileUrl: data.fileUrl,
+              fileName: data.fileName,
+            });
           }
-        } catch (err) { alert("Failed to send voice message"); }
-        finally { setUploading(false); }
+        } catch (err) {
+          alert("Failed to send voice message");
+        } finally {
+          setUploading(false);
+        }
       };
       mr.start();
       setRecording(true);
       setRecordingTime(0);
       recordingTimerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000);
-    } catch (err) { alert("Microphone access denied. Please allow microphone permission."); }
+    } catch (err) {
+      alert("Microphone access denied.");
+    }
   };
 
   const stopRecording = () => {
@@ -254,7 +268,10 @@ export default function ChatWindow({ selectedUser }) {
   const handleTyping = (e) => {
     setInput(e.target.value);
     if (!socket) return;
-    if (!isTyping) { setIsTyping(true); socket.emit("typing", { receiverId: selectedUser._id, isTyping: true }); }
+    if (!isTyping) {
+      setIsTyping(true);
+      socket.emit("typing", { receiverId: selectedUser._id, isTyping: true });
+    }
     clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
@@ -266,9 +283,11 @@ export default function ChatWindow({ selectedUser }) {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
-  const formatTime = (date) => new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const formatTime = (date) =>
+    new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-  const formatRecTime = (s) => `${Math.floor(s/60).toString().padStart(2,"0")}:${(s%60).toString().padStart(2,"0")}`;
+  const formatRecTime = (s) =>
+    `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
   const getStatusText = () => {
     if (!selectedUser) return "";
@@ -278,9 +297,9 @@ export default function ChatWindow({ selectedUser }) {
     const date = new Date(ls);
     const diff = Math.floor((Date.now() - date) / 1000);
     if (diff < 60) return "Last seen just now";
-    if (diff < 3600) return `Last seen ${Math.floor(diff/60)}m ago`;
-    if (diff < 86400) return `Last seen today at ${date.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" })}`;
-    return `Last seen ${date.toLocaleDateString([], { month:"short", day:"numeric" })}`;
+    if (diff < 3600) return `Last seen ${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `Last seen today at ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    return `Last seen ${date.toLocaleDateString([], { month: "short", day: "numeric" })}`;
   };
 
   if (!selectedUser) {
@@ -316,7 +335,11 @@ export default function ChatWindow({ selectedUser }) {
           </div>
         </div>
         <div className="chat-header-actions">
-          <button className="icon-btn" onClick={() => { setShowSearch(s => !s); setSearchQuery(""); setSearchResults([]); }} title="Search messages">
+          <button
+            className="icon-btn"
+            onClick={() => { setShowSearch(s => !s); setSearchQuery(""); setSearchResults([]); }}
+            title="Search messages"
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="19" height="19">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
@@ -327,7 +350,7 @@ export default function ChatWindow({ selectedUser }) {
       {/* Message Search Bar */}
       {showSearch && (
         <div className="msg-search-bar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16" style={{color:"var(--text-secondary)"}}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16" style={{ color: "var(--text-secondary)" }}>
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
           <input
@@ -398,8 +421,8 @@ export default function ChatWindow({ selectedUser }) {
 
       {/* Input Area */}
       <div className="message-input-area">
-        <input type="file" ref={fileInputRef} accept="image/*" style={{ display:"none" }} onChange={(e) => handleFileUpload(e, "image")} />
-        <input type="file" ref={audioFileInputRef} accept="audio/*" style={{ display:"none" }} onChange={(e) => handleFileUpload(e, "audio")} />
+        <input type="file" ref={fileInputRef} accept="image/*" style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "image")} />
+        <input type="file" ref={audioFileInputRef} accept="audio/*" style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "audio")} />
 
         {recording ? (
           <div className="recording-bar">
@@ -436,7 +459,7 @@ export default function ChatWindow({ selectedUser }) {
               disabled={uploading}
             />
             {!input.trim() ? (
-              <button className="mic-btn" onMouseDown={startRecording} onTouchStart={startRecording} title="Hold to record / click to start">
+              <button className="mic-btn" onMouseDown={startRecording} onTouchStart={startRecording} title="Hold to record">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
                   <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
                 </svg>

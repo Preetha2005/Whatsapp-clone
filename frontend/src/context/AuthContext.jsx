@@ -8,42 +8,34 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
 
-  // ✅ FIXED BASE URL
-  const API = import.meta.env.VITE_API_URL;
+  const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  // Set base URL once globally
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  axios.interceptors.request.use((config) => {
+    const t = localStorage.getItem("token");
+    if (t) config.headers["Authorization"] = `Bearer ${t}`;
+    return config;
+  });
 
-// Interceptor — always attaches token to EVERY request automatically
-axios.interceptors.request.use((config) => {
-  const t = localStorage.getItem("token");
-  if (t) config.headers["Authorization"] = `Bearer ${t}`;
-  return config;
-});
-
-useEffect(() => {
-  if (token) {
-    fetchMe();
-  } else {
-    setLoading(false);
-  }
-}, [token]);
+  useEffect(() => {
+    if (token) {
+      fetchMe();
+    } else {
+      setLoading(false);
+    }
+  }, [token]);
 
   const fetchMe = async () => {
-  try {
-    const { data } = await axios.get(`${API}/users/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    setUser(data);
-  } catch (err) {
-    console.error("fetchMe error:", err.response?.data || err.message);
-    // ❌ DO NOT logout immediately
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const { data } = await axios.get(`${API}/api/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser(data);
+    } catch (err) {
+      console.error("fetchMe error:", err.response?.data || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const login = async (email, password) => {
     const { data } = await axios.post(`${API}/api/auth/login`, { email, password });
@@ -51,7 +43,6 @@ useEffect(() => {
     axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
     setToken(data.token);
     setUser(data.user);
-
     const profile = await axios.get(`${API}/api/users/me`);
     setUser(profile.data);
   };
@@ -66,7 +57,6 @@ useEffect(() => {
     axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
     setToken(data.token);
     setUser(data.user);
-
     const profile = await axios.get(`${API}/api/users/me`);
     setUser(profile.data);
   };
@@ -79,7 +69,7 @@ useEffect(() => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, fetchMe }}>
       {children}
     </AuthContext.Provider>
   );

@@ -7,7 +7,7 @@ import ProfileModal from "../components/ProfileModal";
 import "./Chat.css";
 import { useAuth } from "../context/AuthContext";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Chat() {
   const { token } = useAuth();
@@ -17,14 +17,14 @@ export default function Chat() {
   const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
-  if (!token) return;
-  axios
-    .get(`${API}/users`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    .then(({ data }) => setUsers(data))
-    .catch((err) => console.error("Failed to fetch users:", err));
-}, [token]);
+    if (!token) return;
+    axios
+      .get(`${API}/api/users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(({ data }) => setUsers(data))
+      .catch((err) => console.error("Failed to fetch users:", err));
+  }, [token]);
 
   const handleSelectUser = (u) => {
     setSelectedUser(u);
@@ -50,7 +50,9 @@ export default function Chat() {
       ) : (
         <ChatWindow selectedUser={selectedUser} />
       )}
-      {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
+      {showProfile && (
+        <ProfileModal onClose={() => setShowProfile(false)} />
+      )}
     </div>
   );
 }
