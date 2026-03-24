@@ -18,7 +18,12 @@ export default function Chat() {
 
   useEffect(() => {
   if (!token) return;
-  axios.get(`${API}/users`).then(({ data }) => setUsers(data));
+  axios
+    .get(`${API}/users`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then(({ data }) => setUsers(data))
+    .catch((err) => console.error("Failed to fetch users:", err));
 }, [token]);
 
   const handleSelectUser = (u) => {
