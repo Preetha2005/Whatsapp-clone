@@ -3,7 +3,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import "./AIChat.css";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function AIChat() {
   const { user } = useAuth();
@@ -29,7 +29,7 @@ export default function AIChat() {
     setLoading(true);
 
     try {
-      const { data } = await axios.post(`${API}/ai/chat`, {
+      const { data } = await axios.post(`${API}/api/ai/chat`, {
         message: text,
         history: history.slice(-10),
       });
