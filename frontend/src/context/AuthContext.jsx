@@ -11,14 +11,23 @@ export const AuthProvider = ({ children }) => {
   // ✅ FIXED BASE URL
   const API = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      fetchMe();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
+  // Set base URL once globally
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+// Interceptor — always attaches token to EVERY request automatically
+axios.interceptors.request.use((config) => {
+  const t = localStorage.getItem("token");
+  if (t) config.headers["Authorization"] = `Bearer ${t}`;
+  return config;
+});
+
+useEffect(() => {
+  if (token) {
+    fetchMe();
+  } else {
+    setLoading(false);
+  }
+}, [token]);
 
   const fetchMe = async () => {
   try {

@@ -10,14 +10,16 @@ import { useAuth } from "../context/AuthContext";
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export default function Chat() {
+  const { token } = useAuth();
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAI, setShowAI] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
-    axios.get(`${API}/users`).then(({ data }) => setUsers(data));
-  }, []);
+  if (!token) return;
+  axios.get(`${API}/users`).then(({ data }) => setUsers(data));
+}, [token]);
 
   const handleSelectUser = (u) => {
     setSelectedUser(u);
