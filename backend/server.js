@@ -13,6 +13,7 @@ const messageRoutes = require("./routes/messages");
 const uploadRoutes = require("./routes/upload");
 const aiRoutes = require("./routes/ai");
 const socketHandler = require("./socket");
+const groupsRouter = require("./routes/groups");
 
 const app = express();
 const server = http.createServer(app);
@@ -20,6 +21,7 @@ const server = http.createServer(app);
 // ✅ PORT FIX (important for Render)
 const PORT = process.env.PORT || 5000;
 
+app.use("/api/groups", groupsRouter);
 // ✅ CORS setup
 app.use(
   cors({
@@ -58,6 +60,57 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
+// Group chat socket events
+socket.on("join_group", ({ groupId }) => {
+  socket.join(`group_${groupId}`);
+});
+
+socket.on("send_group_message", async ({ groupId, content, type, fileUrl, fileName }) => {
+  try {
+    const GroupMessage = require("./models/GroupMessage");
+    const msg = await GroupMessage.create({
+      group: groupId,
+      sender: socket.userId,
+      content,
+      type: type || "text",
+      fileUrl,
+      fileName,
+    });
+    const populated = await msg.populate("sender", "-password");
+    io.to(`group_${groupId}`).emit("group_message", populated);
+
+    // Update group lastMessage
+    const Group = require("./models/Group");
+    await Group.findByIdAndUpdate(groupId, { lastMessage: content });
+  } catch (err) {
+    console.error("Group message error:", err);
+  }
+});
+
+// WebRTC call signaling
+socket.on("call_user", ({ to, type, offer, username, avatarColor }) => {
+  io.to(to).emit("incoming_call", {
+    from: socket.userId,
+    type,
+    offer,
+    username,
+    avatarColor,
+  });
+});
+
+socket.on("call_accepted", async ({ to, answer }) => {
+  // Create answer on receiver side
+  io.to(to).emit("call_accepted", { answer });
+});
+
+socket.on("call_rejected", ({ to }) => {
+  io.to(to).emit("call_rejected");
+});
+
+socket.on("ice_candidate", ({ to, candidate }) => {
+  io.to(to).emit("ice_candidate", { candidate });
+}); 
 
 socketHandler(io);
 

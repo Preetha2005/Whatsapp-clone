@@ -63,6 +63,12 @@ export default function Sidebar({ users, selectedUser, onSelectUser, onOpenProfi
               <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
             </svg>
           </button>
+
+          <button className="icon-btn" onClick={onCreateGroup} title="New Group">
+  <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+  </svg>
+</button>
         </div>
       </div>
 
@@ -93,6 +99,32 @@ export default function Sidebar({ users, selectedUser, onSelectUser, onOpenProfi
             <span className="user-status ai-status">● Ask me anything</span>
           </div>
         </div>
+
+        {/* Groups */}
+{groups?.length > 0 && (
+  <>
+    <div style={{ padding: "8px 16px", color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600 }}>
+      GROUPS
+    </div>
+    {groups.map((g) => (
+      <div
+        key={g._id}
+        className={`user-item ${selectedGroup?._id === g._id ? "active" : ""}`}
+        onClick={() => onSelectGroup(g)}
+      >
+        <div className="user-avatar" style={{ background: g.avatarColor || "#00a884" }}>
+          <span>{g.name?.slice(0, 2).toUpperCase()}</span>
+        </div>
+        <div className="user-info">
+          <span className="username">{g.name}</span>
+          <span className="user-status">
+            {g.members?.length} members
+          </span>
+        </div>
+      </div>
+    ))}
+  </>
+)}
 
         {filteredUsers.length === 0 && search && (
           <p className="no-users">No users found for "{search}"</p>

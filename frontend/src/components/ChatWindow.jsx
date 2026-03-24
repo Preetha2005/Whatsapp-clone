@@ -37,7 +37,8 @@ function Ticks({ status }) {
   );
 }
 
-export default function ChatWindow({ selectedUser }) {
+// ✅ ADDED: onCall prop
+export default function ChatWindow({ selectedUser, onCall }) {
   const { user, token } = useAuth();
   const { socket, onlineUsers, lastSeen } = useSocket();
   const [messages, setMessages] = useState([]);
@@ -334,7 +335,19 @@ export default function ChatWindow({ selectedUser }) {
             {typing ? <span className="typing-indicator">typing...</span> : getStatusText()}
           </div>
         </div>
+
+        {/* ✅ ADDED: Audio + Video call buttons */}
         <div className="chat-header-actions">
+          <button className="icon-btn" onClick={() => onCall && onCall("audio")} title="Voice Call">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/>
+            </svg>
+          </button>
+          <button className="icon-btn" onClick={() => onCall && onCall("video")} title="Video Call">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+            </svg>
+          </button>
           <button
             className="icon-btn"
             onClick={() => { setShowSearch(s => !s); setSearchQuery(""); setSearchResults([]); }}
